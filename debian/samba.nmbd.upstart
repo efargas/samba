@@ -16,7 +16,13 @@ pre-start script
     [ "x$NMBD_DISABLED" = xYes ] && { stop; exit 0; }
 
     SERVER_ROLE=`samba-tool testparm --parameter-name="server role"  2>/dev/null | tail -1`
-    [ "$SERVER_ROLE" = "active directory domain controller" ] && { stop; exit 0; }
+    if [ "$SERVER_ROLE" = "active directory domain controller" ]; then
+      SERVICES=`testparm -s --parameter-name='server services' 2>/dev/null || true`
+      if [ -n "`echo $SERVICES | grep -E '[,]?[\s]*nbt[\s]*[,]?[\s]*'`" ]; then
+        stop
+        exit 0
+      fi
+    fi
 
     exit 0
 end script
